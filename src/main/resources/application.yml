@@ -1,0 +1,10 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: auth-service
+  datasource:
+    username: admin
+    password: root
+    url: jdbc:postgresql://localhost:5435/users-db
