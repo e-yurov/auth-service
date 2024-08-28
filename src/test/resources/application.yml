@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/workplace_reservation
+      client:
+        registration:
+          keycloak:
+            scope: openid, profile
+            authorization-grant-type: authorization_code
+            client-id: reservation-app
+            client-secret: VRjLSsAD4t9r6Dw8DeBK4oVE2z4gZyFo
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8180/realms/workplace_reservation
+            user-name-attribute: preferred_username
+
+keycloak:
+  server-url: http://localhost:8180
+  realm: workplace_reservation
+  username: admin
+  password: admin
