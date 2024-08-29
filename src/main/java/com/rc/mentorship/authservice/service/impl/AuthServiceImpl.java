@@ -1,16 +1,28 @@
 package com.rc.mentorship.authservice.service.impl;
 
+import com.rc.mentorship.authservice.dto.request.LoginRequest;
 import com.rc.mentorship.authservice.dto.request.RegisterRequest;
+import com.rc.mentorship.authservice.dto.response.JwtResponse;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.entity.User;
 import com.rc.mentorship.authservice.exception.UserAlreadyExistsException;
+import com.rc.mentorship.authservice.exception.UserNotFoundException;
 import com.rc.mentorship.authservice.mapper.UserMapper;
+import com.rc.mentorship.authservice.properties.AuthKeycloakProperties;
 import com.rc.mentorship.authservice.repository.UserRepository;
 import com.rc.mentorship.authservice.service.AuthService;
 import com.rc.mentorship.authservice.service.KeycloakService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final KeycloakService keycloakService;
+    private final AuthKeycloakProperties properties;
 
     @Override
     @Transactional
@@ -32,5 +45,37 @@ public class AuthServiceImpl implements AuthService {
         user.setKeycloakId(keycloakId);
         userRepository.save(user);
         return userMapper.toDto(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JwtResponse login(LoginRequest loginRequest) {
+        String email = loginRequest.getEmail();
+        if (!userRepository.existsByEmail(email)) {
+            throw new UserNotFoundException(email);
+        }
+
+        String token = getAccessToken(loginRequest.getEmail(), loginRequest.getPassword());
+        return new JwtResponse(token);
+    }
+
+    private String getAccessToken(String username, String password) {
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("username", username);
+        body.add("password", password);
+        body.add("grant_type", "password");
+        body.add("client_id", properties.getClientId());
+        body.add("client_secret", properties.getClientSecret());
+
+        WebClient client = WebClient.builder().build();
+        Map<String, String> result = client.post()
+                .uri(properties.getTokenUri())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData(body))
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, String>>(){})
+                .block();
+
+        return result.get("access_token");
     }
 }

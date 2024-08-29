@@ -1,6 +1,8 @@
 package com.rc.mentorship.authservice.controller;
 
+import com.rc.mentorship.authservice.dto.request.LoginRequest;
 import com.rc.mentorship.authservice.dto.request.RegisterRequest;
+import com.rc.mentorship.authservice.dto.response.JwtResponse;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.exception.details.ErrorDetails;
 import com.rc.mentorship.authservice.service.AuthService;
@@ -52,5 +54,35 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest registerRequest) {
         return ResponseEntity.ok(authService.register(registerRequest));
+    }
+
+    @Operation(
+            summary = "Получение Access token"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешное получение токена",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = JwtResponse.class)
+                            )
+                    }
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Пользователь с данным email не существует",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorDetails.class)
+                            )
+                    }
+            )
+    })
+    @PostMapping("/login")
+    public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(authService.login(loginRequest));
     }
 }
