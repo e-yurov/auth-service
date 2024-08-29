@@ -7,7 +7,6 @@ import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.entity.User;
 import com.rc.mentorship.authservice.exception.BadCredentialsException;
 import com.rc.mentorship.authservice.exception.UserAlreadyExistsException;
-import com.rc.mentorship.authservice.exception.UserNotFoundException;
 import com.rc.mentorship.authservice.mapper.UserMapper;
 import com.rc.mentorship.authservice.properties.AuthKeycloakProperties;
 import com.rc.mentorship.authservice.repository.UserRepository;
@@ -52,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public JwtResponse login(LoginRequest loginRequest) {
         if (!userRepository.existsByEmail(loginRequest.getEmail())) {
-            throw new UserNotFoundException(loginRequest.getEmail());
+            throw new BadCredentialsException();
         }
 
         String token = getAccessToken(loginRequest);
@@ -75,6 +74,7 @@ public class AuthServiceImpl implements AuthService {
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>(){})
                 .doOnError((e) -> {
+                    System.out.println(e.getMessage());
                     throw new BadCredentialsException();
                 })
                 .block();

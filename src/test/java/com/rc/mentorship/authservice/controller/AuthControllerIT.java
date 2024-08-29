@@ -2,7 +2,9 @@ package com.rc.mentorship.authservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rc.mentorship.authservice.container.KeycloakPostgresContainerIT;
+import com.rc.mentorship.authservice.dto.request.LoginRequest;
 import com.rc.mentorship.authservice.dto.request.RegisterRequest;
+import com.rc.mentorship.authservice.dto.response.JwtResponse;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.entity.User;
 import com.rc.mentorship.authservice.mapper.UserMapper;
@@ -26,9 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthControllerIT extends KeycloakPostgresContainerIT {
     private static final String URL = "/api/v1/auth";
 
-    private static final String NAME = "user";
-    private static final String EMAIL = "user@test.com";
-    private static final String PASSWORD = "Password";
+    private static final String NAME = "admin";
+    private static final String EMAIL = "admin@test.com";
+    private static final String PASSWORD = "admin";
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
@@ -48,6 +50,9 @@ public class AuthControllerIT extends KeycloakPostgresContainerIT {
 
     @Test
     void register_SimpleValues_ReturningToken() throws Exception {
+        String NAME = "user";
+        String EMAIL = "user@test.com";
+        String PASSWORD = "password";
         RegisterRequest request = new RegisterRequest(NAME, EMAIL, PASSWORD);
 
         MvcResult mvcResult = mockMvc.perform(post(URL + "/register")
@@ -71,7 +76,7 @@ public class AuthControllerIT extends KeycloakPostgresContainerIT {
     }
 
     @Test
-    @Sql("/sql/insert_user.sql")
+    @Sql("/sql/insert_user_admin.sql")
     void register_HasUserWithSuchEmail_ReturningBadRequest() throws Exception {
         RegisterRequest request = new RegisterRequest(NAME, EMAIL, PASSWORD);
 
@@ -80,5 +85,44 @@ public class AuthControllerIT extends KeycloakPostgresContainerIT {
                         .content(objectMapper.writeValueAsString(request))
                 )
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Sql("/sql/insert_user_admin.sql")
+    void login_ValidCredentials_ReturningToken() throws Exception {
+        LoginRequest request = new LoginRequest(EMAIL, PASSWORD);
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+        JwtResponse result = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), JwtResponse.class);
+
+        assertThat(result.getToken()).isNotEmpty();
+    }
+
+    @Test
+    void login_NoUserWithSuchEmail_ReturningUnauthorized() throws Exception {
+        LoginRequest request = new LoginRequest(EMAIL, PASSWORD);
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpectAll(status().isUnauthorized());
+    }
+
+    @Test
+    @Sql("/sql/insert_user_admin.sql")
+    void login_WrongPassword_ReturningUnauthorized() throws Exception {
+        LoginRequest request = new LoginRequest(EMAIL, "123");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isUnauthorized());
     }
 }

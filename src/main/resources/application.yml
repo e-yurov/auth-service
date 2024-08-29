@@ -41,7 +41,7 @@ springdoc:
 keycloak:
   server-url: http://localhost:8180
   realm: workplace_reservation
-  username: admin
+  username: admin@test.com
   password: admin
 
 auth:
