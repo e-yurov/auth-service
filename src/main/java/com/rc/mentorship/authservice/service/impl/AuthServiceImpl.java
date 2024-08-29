@@ -40,8 +40,8 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmail(email)) {
             throw new UserAlreadyExistsException(email);
         }
-        keycloakService.addUser(registerRequest);
-        String keycloakId = keycloakService.getKeycloakIdByEmail(email);
+        keycloakService.create(registerRequest);
+        String keycloakId = keycloakService.getIdByEmail(email);
         User user = userMapper.toEntity(registerRequest);
         user.setKeycloakId(keycloakId);
         userRepository.save(user);

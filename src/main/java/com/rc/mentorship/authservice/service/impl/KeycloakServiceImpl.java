@@ -3,7 +3,9 @@ package com.rc.mentorship.authservice.service.impl;
 import com.rc.mentorship.authservice.dto.request.RegisterRequest;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.entity.User;
+import com.rc.mentorship.authservice.exception.UserNotFoundException;
 import com.rc.mentorship.authservice.service.KeycloakService;
+import jakarta.ws.rs.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -29,15 +31,21 @@ public class KeycloakServiceImpl implements KeycloakService {
     private UsersResource usersResource;
 
     public UserResponse fillUserResponse(UserResponse response) {
-        List<String> roles = getUsersResource().get(getKeycloakIdByEmail(response.getEmail()))
-                .roles().realmLevel().listAll()
-                .stream()
-                .map(RoleRepresentation::getName).toList();
+        List<String> roles;
+        try {
+            roles = getUsersResource().get(getIdByEmail(response.getEmail()))
+                    .roles().realmLevel().listAll()
+                    .stream()
+                    .map(RoleRepresentation::getName).toList();
+        } catch (ForbiddenException e) {
+            throw new UserNotFoundException(response.getEmail());
+        }
+
         response.setRoles(roles);
         return response;
     }
 
-    public void addUser(RegisterRequest request) {
+    public void create(RegisterRequest request) {
         CredentialRepresentation credential = createPasswordCredentials(request.getPassword());
         UserRepresentation user = new UserRepresentation();
         user.setEnabled(true);
@@ -49,25 +57,35 @@ public class KeycloakServiceImpl implements KeycloakService {
         addRealmRoleToUser(request.getEmail(), "USER");
     }
 
-    public void updateUser(User user) {
+    public void update(User user) {
         String id = user.getKeycloakId();
-        UserRepresentation representation = getUsersResource().get(id).toRepresentation();
+        UserRepresentation representation;
+        try {
+            representation = getUsersResource().get(id).toRepresentation();
+        } catch (Exception e) {
+            throw new UserNotFoundException(user.getEmail());
+        }
+
         representation.setEmail(user.getEmail());
         representation.setUsername(user.getName());
         getUsersResource().get(id).update(representation);
     }
 
-    public void deleteUserById(String id) {
+    public void deleteById(String id) {
         getUsersResource().delete(id);
     }
 
-    public String getKeycloakIdByEmail(String email) {
-        return getUsersResource().searchByEmail(email, true).get(0).getId();
+    public String getIdByEmail(String email) {
+        return getUserByEmail(email).getId();
     }
 
     @Override
-    public UserRepresentation getKeycloakUserByEmail(String email) {
-        return getUsersResource().searchByEmail(email, true).get(0);
+    public UserRepresentation getUserByEmail(String email) {
+        List<UserRepresentation> users = getUsersResource().searchByEmail(email, true);
+        if (users.isEmpty()) {
+            throw new UserNotFoundException(email);
+        }
+        return users.get(0);
     }
 
     private CredentialRepresentation createPasswordCredentials(String password) {
@@ -80,8 +98,8 @@ public class KeycloakServiceImpl implements KeycloakService {
 
     private void addRealmRoleToUser(String email, String roleName) {
         RealmResource realmResource = keycloak.realm(realm);
-        List<UserRepresentation> users = getUsersResource().searchByEmail(email, true);
-        UserResource userResource = getUsersResource().get(users.get(0).getId());
+        UserRepresentation user = getUserByEmail(email);
+        UserResource userResource = getUsersResource().get(user.getId());
         RoleRepresentation role = realmResource.roles().get(roleName).toRepresentation();
         RoleMappingResource roleMappingResource = userResource.roles();
         roleMappingResource.realmLevel().add(Collections.singletonList(role));

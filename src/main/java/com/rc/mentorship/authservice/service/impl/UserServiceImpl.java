@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toEntity(toUpdate);
         user.setKeycloakId(inDb.get().getKeycloakId());
         userRepository.save(user);
-        keycloakService.updateUser(user);
+        keycloakService.update(user);
         return keycloakService.fillUserResponse(userMapper.toDto(user));
     }
 
@@ -63,6 +63,6 @@ public class UserServiceImpl implements UserService {
         }
         User user = userOptional.get();
         userRepository.delete(user);
-        keycloakService.deleteUserById(user.getKeycloakId());
+        keycloakService.deleteById(user.getKeycloakId());
     }
 }

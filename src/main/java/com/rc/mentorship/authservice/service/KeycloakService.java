@@ -8,13 +8,13 @@ import org.keycloak.representations.idm.UserRepresentation;
 public interface KeycloakService {
     UserResponse fillUserResponse(UserResponse response);
 
-    void addUser(RegisterRequest request);
+    void create(RegisterRequest request);
 
-    void updateUser(User user);
+    void update(User user);
 
-    void deleteUserById(String id);
+    void deleteById(String id);
 
-    String getKeycloakIdByEmail(String email);
+    String getIdByEmail(String email);
 
-    UserRepresentation getKeycloakUserByEmail(String email);
+    UserRepresentation getUserByEmail(String email);
 }

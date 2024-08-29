@@ -58,7 +58,7 @@ public class AuthControllerIT extends KeycloakPostgresContainerIT {
                 .andReturn();
         UserResponse result = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), UserResponse.class);
         Optional<User> actualInDb = userRepository.findByEmail(EMAIL);
-        UserRepresentation keycloakUser = keycloakService.getKeycloakUserByEmail(EMAIL);
+        UserRepresentation keycloakUser = keycloakService.getUserByEmail(EMAIL);
 
         assertThat(result).isNotNull()
                 .extracting(UserResponse::getName, UserResponse::getEmail)
