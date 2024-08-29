@@ -5,6 +5,7 @@ import com.rc.mentorship.authservice.dto.request.RegisterRequest;
 import com.rc.mentorship.authservice.dto.response.JwtResponse;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.entity.User;
+import com.rc.mentorship.authservice.exception.BadCredentialsException;
 import com.rc.mentorship.authservice.exception.UserAlreadyExistsException;
 import com.rc.mentorship.authservice.exception.UserNotFoundException;
 import com.rc.mentorship.authservice.mapper.UserMapper;
@@ -50,19 +51,18 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public JwtResponse login(LoginRequest loginRequest) {
-        String email = loginRequest.getEmail();
-        if (!userRepository.existsByEmail(email)) {
-            throw new UserNotFoundException(email);
+        if (!userRepository.existsByEmail(loginRequest.getEmail())) {
+            throw new UserNotFoundException(loginRequest.getEmail());
         }
 
-        String token = getAccessToken(loginRequest.getEmail(), loginRequest.getPassword());
+        String token = getAccessToken(loginRequest);
         return new JwtResponse(token);
     }
 
-    private String getAccessToken(String username, String password) {
+    private String getAccessToken(LoginRequest request) {
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("username", username);
-        body.add("password", password);
+        body.add("username", request.getEmail());
+        body.add("password", request.getPassword());
         body.add("grant_type", "password");
         body.add("client_id", properties.getClientId());
         body.add("client_secret", properties.getClientSecret());
@@ -74,8 +74,14 @@ public class AuthServiceImpl implements AuthService {
                 .body(BodyInserters.fromFormData(body))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, String>>(){})
+                .doOnError((e) -> {
+                    throw new BadCredentialsException();
+                })
                 .block();
 
+        if (result == null || result.get("access_token") == null) {
+            throw new BadCredentialsException();
+        }
         return result.get("access_token");
     }
 }
