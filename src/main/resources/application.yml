@@ -31,6 +31,15 @@ spring:
             issuer-uri: http://localhost:8180/realms/workplace_reservation
             jwk-set-uri: ${spring.security.oauth2.client.provider.keycloak.issuer-uri}/protocol/openid-connect/certs
             user-name-attribute: preferred_username
+  cache:
+    type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: d29ya3BsYWNlUmVkaXNTZWNyZXQ=
+      repositories:
+        enabled: false
 
 springdoc:
   swagger-ui:

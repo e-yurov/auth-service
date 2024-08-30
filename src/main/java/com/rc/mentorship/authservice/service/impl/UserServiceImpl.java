@@ -9,6 +9,8 @@ import com.rc.mentorship.authservice.repository.UserRepository;
 import com.rc.mentorship.authservice.service.KeycloakService;
 import com.rc.mentorship.authservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CachePut(key = "#toUpdate.id", value = "users")
     public UserResponse update(UserUpdateRequest toUpdate) {
         Optional<User> inDb = userRepository.findById(toUpdate.getId());
         if (inDb.isEmpty()) {
@@ -56,6 +59,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(key = "#id", value = "users")
     public void delete(UUID id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isEmpty()) {

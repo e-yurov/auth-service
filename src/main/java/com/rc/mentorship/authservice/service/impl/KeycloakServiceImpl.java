@@ -61,6 +61,8 @@ public class KeycloakServiceImpl implements KeycloakService {
         String id = user.getKeycloakId();
         UserRepresentation representation;
         try {
+            List<UserRepresentation> list = getUsersResource().list();
+            System.out.println(list);
             representation = getUsersResource().get(id).toRepresentation();
         } catch (Exception e) {
             throw new UserNotFoundException(user.getEmail());
