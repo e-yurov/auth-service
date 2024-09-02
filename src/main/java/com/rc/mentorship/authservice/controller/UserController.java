@@ -98,7 +98,7 @@ public class UserController {
     @GetMapping("/office-id")
     public ResponseEntity<OfficeIdResponse> findOfficeIdByKeycloakId(
             @RequestParam
-            String keycloakId
+            UUID keycloakId
     ) {
         OfficeIdResponse response = userService.getOfficeIdByKeycloakId(keycloakId);
         return ResponseEntity.ok(response);

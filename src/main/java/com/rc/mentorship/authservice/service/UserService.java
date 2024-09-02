@@ -19,5 +19,5 @@ public interface UserService {
 
     UUID getUserIdByKeycloakId(String keycloakId);
 
-    OfficeIdResponse getOfficeIdByKeycloakId(String keycloakId);
+    OfficeIdResponse getOfficeIdByKeycloakId(UUID keycloakId);
 }

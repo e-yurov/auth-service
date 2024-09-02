@@ -75,21 +75,18 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UUID getUserIdByKeycloakId(String keycloakId) {
-        return findUserByKeycloakId(keycloakId).getId();
+        return findUserByKeycloakId(UUID.fromString(keycloakId)).getId();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OfficeIdResponse getOfficeIdByKeycloakId(String keycloakId) {
+    public OfficeIdResponse getOfficeIdByKeycloakId(UUID keycloakId) {
         return new OfficeIdResponse(findUserByKeycloakId(keycloakId).getOfficeId());
     }
 
-    private User findUserByKeycloakId(String keycloakId) {
-        Optional<User> byKeycloakId = userRepository.findByKeycloakId(keycloakId);
-        if (byKeycloakId.isEmpty()) {
-            throw new UserNotFoundException(UUID.fromString(keycloakId));
-        }
-
-        return byKeycloakId.get();
+    private User findUserByKeycloakId(UUID keycloakId) {
+        return userRepository.findByKeycloakId(keycloakId.toString()).orElseThrow(
+                () -> new UserNotFoundException(keycloakId)
+        );
     }
 }
