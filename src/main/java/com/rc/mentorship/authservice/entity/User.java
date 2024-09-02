@@ -24,4 +24,7 @@ public class User {
 
     @Column(name = "keycloak_id")
     private String keycloakId;
+
+    @Column(name = "office_id")
+    private String officeId;
 }

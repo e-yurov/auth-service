@@ -1,6 +1,7 @@
 package com.rc.mentorship.authservice.controller;
 
 import com.rc.mentorship.authservice.dto.request.UserUpdateRequest;
+import com.rc.mentorship.authservice.dto.response.OfficeIdResponse;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.exception.details.ErrorDetails;
 import com.rc.mentorship.authservice.service.UserService;
@@ -91,6 +92,15 @@ public class UserController {
             UUID id
     ) {
         UserResponse response = userService.findById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/office-id")
+    public ResponseEntity<OfficeIdResponse> findOfficeIdByKeycloakId(
+            @RequestParam
+            String keycloakId
+    ) {
+        OfficeIdResponse response = userService.getOfficeIdByKeycloakId(keycloakId);
         return ResponseEntity.ok(response);
     }
 

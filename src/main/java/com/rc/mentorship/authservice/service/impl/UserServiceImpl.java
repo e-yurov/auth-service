@@ -1,6 +1,7 @@
 package com.rc.mentorship.authservice.service.impl;
 
 import com.rc.mentorship.authservice.dto.request.UserUpdateRequest;
+import com.rc.mentorship.authservice.dto.response.OfficeIdResponse;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import com.rc.mentorship.authservice.entity.User;
 import com.rc.mentorship.authservice.exception.NotFoundException;
@@ -14,8 +15,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,14 +74,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getUserIdByKeycloakIdInAuthentication() {
-        Jwt credentials = (Jwt) SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        String keycloakId = credentials.getSubject();
+    public UUID getUserIdByKeycloakId(String keycloakId) {
+        return findUserByKeycloakId(keycloakId).getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public OfficeIdResponse getOfficeIdByKeycloakId(String keycloakId) {
+        return new OfficeIdResponse(findUserByKeycloakId(keycloakId).getOfficeId());
+    }
+
+    private User findUserByKeycloakId(String keycloakId) {
         Optional<User> byKeycloakId = userRepository.findByKeycloakId(keycloakId);
         if (byKeycloakId.isEmpty()) {
-            throw new UserNotFoundException(credentials.getClaimAsString("email"));
+            throw new UserNotFoundException(UUID.fromString(keycloakId));
         }
 
-        return byKeycloakId.get().getId().toString();
+        return byKeycloakId.get();
     }
 }

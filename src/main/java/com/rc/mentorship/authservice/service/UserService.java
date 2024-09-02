@@ -1,6 +1,7 @@
 package com.rc.mentorship.authservice.service;
 
 import com.rc.mentorship.authservice.dto.request.UserUpdateRequest;
+import com.rc.mentorship.authservice.dto.response.OfficeIdResponse;
 import com.rc.mentorship.authservice.dto.response.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,5 +17,7 @@ public interface UserService {
 
     void delete(UUID id);
 
-    String getUserIdByKeycloakIdInAuthentication();
+    UUID getUserIdByKeycloakId(String keycloakId);
+
+    OfficeIdResponse getOfficeIdByKeycloakId(String keycloakId);
 }

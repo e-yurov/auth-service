@@ -4,6 +4,8 @@ import com.rc.mentorship.authservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -15,7 +17,8 @@ public class UserIdPermissionEvaluator implements PermissionEvaluator {
 
     @Override
     public boolean hasPermission(Authentication authentication, Object targetDomainObject, Object permission) {
-        return userService.getUserIdByKeycloakIdInAuthentication().equals(targetDomainObject.toString());
+        Jwt credentials = (Jwt) SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        return userService.getUserIdByKeycloakId(credentials.getSubject()).equals(targetDomainObject);
     }
 
     @Override
