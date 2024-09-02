@@ -3,8 +3,12 @@ package com.rc.mentorship.authservice.config;
 import com.rc.mentorship.authservice.exception.handler.CustomAccessDeniedHandler;
 import com.rc.mentorship.authservice.exception.handler.CustomAuthenticationEntryPoint;
 import com.rc.mentorship.authservice.util.JwtAuthConverter;
+import com.rc.mentorship.authservice.util.UserIdPermissionEvaluator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.PermissionEvaluator;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -42,5 +46,15 @@ public class SecurityConfig {
         });
 
         return http.build();
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
+            UserIdPermissionEvaluator permissionEvaluator
+    ) {
+        DefaultMethodSecurityExpressionHandler expressionHandler =
+                new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setPermissionEvaluator(permissionEvaluator);
+        return expressionHandler;
     }
 }

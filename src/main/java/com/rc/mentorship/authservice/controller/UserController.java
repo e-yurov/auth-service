@@ -84,7 +84,7 @@ public class UserController {
             )
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @PreAuthorize("hasPermission(#id, null) or hasAnyRole('MANAGER', 'ADMIN')")
     public ResponseEntity<UserResponse> findById(
             @Parameter(name = "id", in = ParameterIn.PATH)
             @PathVariable("id")
